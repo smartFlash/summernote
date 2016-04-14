@@ -9,7 +9,10 @@ Summernote是一个非常强大的WYSIWYG富文本编辑器,默认视频是支�
 - 扩展默认外链视频,新增腾讯视频.现在很多产品都是基于微信公众平台开发的。而微信公众平台只支持腾讯视频。所以你懂的.(这一项需要修改summernote.js源码,具体代码如自定义代码部分)
 - 暂时只有这么多，打算下一步集成emoji表情。但是目前项目中用不到，具体时间不确定。如果有人需要可以发起issue
 
+### Demo
 ![example](https://github.com/smartFlash/summernote/blob/develop/images/example.jpg)
+
+![example2](https://github.com/smartFlash/summernote/blob/develop/images/example2.jpg)
 
 ##自定义代码
 
