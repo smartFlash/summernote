@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>summernote editor</title>
+
+  <link href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+  <script src="http://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+  <script src="http://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <link href="http://cdn.bootcss.com/summernote/0.8.1/summernote.css" rel="stylesheet">
+  <!-- <script src="http://cdn.bootcss.com/summernote/0.8.1/summernote.min.js"></script> -->
+  <script src="summernote.js"></script>
+  <script src="http://cdn.bootcss.com/summernote/0.8.1/lang/summernote-zh-CN.min.js"></script>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="hero-unit">
+      <div class="col-xs-12" style="z-index: 1000;margin-top:50px;">
+        <h4 style="text-align: center">summernote Editor</h4>
+        <strong>
+          点击<a href="http://jsfiddle.net/gh/get/extjs/4.2/icattlecoder/jsfiddle/tree/master/uptoken" target="_blank">在线生成Token</a>
+          填入下面的输入框,即可测试图片、音频、视频上传功能
+</strong>
+        <input type="input" class="form-control input-lg" placeholder="七牛上传access token" id="token" />
+        <input type="input" class="form-control input-lg" placeholder="七牛空间地址,格式:http://7xs02p.com1.z0.glb.clouddn.com/" id="qiniu_domian" />
+      </div>
+
+      <div id="editor">
+
+      </div>
+      <div class=" clearfix" style="margin-top: 10px;">
+        <div class="pull-right">
+          <a style="color: #fff;" href="javascript:;" class="btn btn-info" id="submitBtn">保存</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+  <link rel="stylesheet" href="plugin/extend.css" />
+  <script type="text/javascript" src="plugin/extend.js"></script>
+  <script>
+    $(function() {
+
+      var audioButton = function(context) {
+        var ui = $.summernote.ui;
+
+        // create button
+        var button = ui.button({
+          contents: '音频',
+          tooltip: '音频上传',
+          click: function() {
+            var options = {
+              body: '<form><div class="form-group note-group-select-from-files">' +
+                '<label>从本地上传</label>' +
+                '<input class="form-control" type="file"  name="files" accept="audio/*">' +
+                '</div></form>',
+              dialogsFade: true,
+              title: "音频上传",
+              footer: '<button href="#" class="btn btn-primary note-qiniu-btn">确定</button>'
+            }
+            var $container = $(document.body);
+            var $dialog = ui.dialog({
+              className: 'qiniu-dialog',
+              title: options.title,
+              fade: options.dialogsFade,
+              body: options.body,
+              footer: options.footer
+            }).render().appendTo($container);
+            this.destroy = function() {
+              ui.hideDialog(this.$dialog);
+              this.$dialog.remove();
+            };
+            this.bindEnterKey = function($input, $btn) {
+              $input.on('keypress', function(event) {
+                if (event.keyCode === key.code.ENTER) {
+                  $btn.trigger('click');
+                }
+              });
+            };
+            $dialog.modal('show');
+            var $qiniuBtn = $dialog.find(".note-qiniu-btn");
+
+            $qiniuBtn.click(function(event) {
+              event.preventDefault();
+              var files = $dialog.find("input[type=file]")[0].files;
+              //console.log(files)
+              var token = Cookies("token")
+              for (var i = 0, len = files.length; i < len; i++) {
+                upload(event, context, files[i], token, function(data_) {
+                  var $node = createAudioNode(data_);
+                  if ($node) {
+                    ///context.invoke('editor.saveRange');
+                    context.invoke('editor.insertNode', $node);
+                    context.invoke('editor.restoreRange');
+                    context.invoke('editor.focus');
+                    $dialog.modal('hide');
+                    return false;
+                  }
+                })
+              }
+
+
+            });
+            var createAudioNode = function(url) {
+              var $audio = $("<audio>");
+              $audio.attr('src', url).attr("class", "e-audio-player").attr("preload", "auto").attr("controls", "controls");
+              return $audio[0]
+            }
+          }
+        });
+
+        return button.render(); // return button as jquery object
+      }
+      var videoButton = function(context) {
+        var ui = $.summernote.ui;
+        // create button
+        var button = ui.button({
+          contents: '视频',
+          tooltip: '视频上传',
+          click: function() {
+            var options = {
+              body: '<form><div class="form-group note-group-select-from-files">' +
+                '<label>从本地上传</label>' +
+                '<input class="form-control" type="file" name="files" accept="video/*">' +
+                '</div></form>',
+              dialogsFade: true,
+              title: "视频上传",
+              footer: '<button href="#" class="btn btn-primary note-qiniu-btn">确定</button>'
+            }
+            var $container = $(document.body);
+            var $dialog = ui.dialog({
+              className: 'qiniu-dialog',
+              title: options.title,
+              fade: options.dialogsFade,
+              body: options.body,
+              footer: options.footer
+            }).render().appendTo($container);
+            this.destroy = function() {
+              ui.hideDialog(this.$dialog);
+              this.$dialog.remove();
+            };
+            this.bindEnterKey = function($input, $btn) {
+              $input.on('keypress', function(event) {
+                if (event.keyCode === key.code.ENTER) {
+                  $btn.trigger('click');
+                }
+              });
+            };
+            $dialog.modal('show');
+            var $qiniuBtn = $dialog.find(".note-qiniu-btn");
+
+
+            $qiniuBtn.click(function(event) {
+              event.preventDefault();
+              var files = $dialog.find("input[type=file]")[0].files;
+              //console.log(files)
+              for (var i = 0, len = files.length; i < len; i++) {
+                upload(event, context, files[i], token, function(data_) {
+                  var $node = createVideoNode(data_);
+                  context.invoke('editor.restoreRange');
+                  if ($node) {
+                    ///context.invoke('editor.saveRange');
+                    context.invoke('editor.insertNode', $node);
+                    $dialog.modal('hide');
+                    return false;
+                  }
+                })
+              }
+
+            });
+            var createVideoNode = function(url) {
+              var $video = $("<video controls>");
+              $video.attr('src', url).attr("class", "e-video-player").attr("preload", "auto")
+              $video.addClass('note-video-clip');
+              return $video[0]
+            }
+          }
+        });
+
+        return button.render(); // return button as jquery object
+      }
+      var $editor = $('#editor').summernote({
+        height: 400, // set editor height
+        minHeight: null, // set minimum height of editor
+        maxHeight: null, // set maximum height of editor
+        focus: true, // set focus to editable area after initializing summernote
+        lang: 'zh-CN',
+        toolbar: [
+          ['style', ['style']],
+
+          ['font', ['bold', 'underline', 'clear']],
+          ['fontname', ['fontname']],
+          ['color', ['color']],
+          ['para', ['ul', 'ol', 'paragraph']],
+          ['table', ['table']],
+          ['insert', ['link', 'picture', 'video', 'audioUpload', "videoUpload"]],
+          ['view', ['fullscreen', 'codeview', 'help']],
+          ['list', ['undo', 'redo']]
+        ],
+        popover: {
+          image: [
+            ['imagesize', ['imageSize100', 'imageSize50', 'imageSize25']],
+            ['float', ['floatLeft', 'floatRight', 'floatNone']],
+            ['remove', ['removeMedia']]
+          ],
+          link: [
+            ['link', ['linkDialogShow', 'unlink']]
+          ],
+          audioUpload: [
+            ['audioUpload', ['linkDialogShow', 'unlink']]
+          ],
+          videoUpload: [
+            ['videoUpload', ['linkDialogShow', 'unlink']]
+          ],
+          air: [
+            ['color', ['color']],
+            ['font', ['bold', 'underline', 'clear']],
+            ['para', ['ul', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture']]
+          ]
+        },
+        callbacks: {
+          onImageUpload: function(files, context, welEditable) {
+            var $note = $(this);
+            for (var i = 0, len = files.length; i < len; i++) {
+              upload(event, context, files[i], token, function(data_) {
+                $note.summernote('insertImage', data_)
+              })
+            }
+          }
+        },
+        buttons: {
+          audioUpload: audioButton,
+          videoUpload: videoButton
+        }
+      });
+
+      function upload(event, context, files, token, callback) {
+        var qiniu_domain = document.getElementById("qiniu_domian").value
+        var file = files;
+        var temp_file = files["name"].split(".");
+        var key = Math.random(5).toString(36).substr(15) + (+new Date()) + '.' + temp_file[temp_file.length - 1];
+        qix.uploadFile({
+          token: $("#token").val(), //七牛上传token
+          key: key,
+          file: file
+        }).then(function(data) {
+          var data_ = qiniu_domain + JSON.parse(data).key;
+          callback(data_)
+        }).catch(function(error) {
+          alert(error) //七牛错误处理
+        });
+      }
+
+    });
+  </script>
+</body>
+
+</html>
